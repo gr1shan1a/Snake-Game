@@ -1,3 +1,5 @@
+package snakeGame;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -24,20 +26,31 @@ public class GameField extends JPanel implements ActionListener {
     private boolean down = false;
     private boolean inGame = true;
 
+    private JButton playAgainButton;
 
-    public GameField(){
+    public GameField() {
         setBackground(Color.black);
         LoadImages();
         initGame();
         addKeyListener(new FieldKeyListener());
         setFocusable(true);
 
+        playAgainButton = new JButton("Play Again");
+        playAgainButton.setVisible(false);
+        playAgainButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                restartGame();
+            }
+        });
+        this.add(playAgainButton);
     }
 
+
     public void LoadImages() {
-        ImageIcon iia = new ImageIcon("apple.png");
+        ImageIcon iia = new ImageIcon("images/apple.png");
         apple = iia.getImage();
-        ImageIcon iid = new ImageIcon("dot.png");
+        ImageIcon iid = new ImageIcon("images/dot.png");
         dot = iid.getImage();
     }
 
@@ -56,27 +69,6 @@ public class GameField extends JPanel implements ActionListener {
     public void createApple() {
         appleX = new Random().nextInt(20)*DOT_SIZE;
         appleY = new Random().nextInt(20)*DOT_SIZE;
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        if(inGame) {
-            g.drawImage(apple, appleX, appleY, this);
-            for (int i = 0; i < dots; i++) {
-                g.drawImage(dot, x[i], y[i], this);
-            }
-        } else{
-            String str = "Game Over";
-
-            //Font f = new Font("Arial",14,Font.BOLD);
-            g.setColor(Color.white);
-            // g.setFont(f);
-            g.drawString(str,125,SIZE/2);
-            String str1 = Integer.toString(dots);
-            g.drawString("Your score: "+ str1, 119, SIZE/4);
-        }
-
     }
 
     public void move() {
@@ -133,7 +125,44 @@ public class GameField extends JPanel implements ActionListener {
             move();
         }
 
-        repaint(); //
+        repaint();
+    }
+
+    private void showGameOver(Graphics g) {
+        String str = "Game Over";
+        g.setColor(Color.white);
+        g.drawString(str, 125, SIZE / 2);
+        String scoreStr = "Your score: " + dots;
+        g.drawString(scoreStr, 119, SIZE / 2 + 20);
+        String instructions = "Press ENTER to play again";
+        g.drawString(instructions, 85, SIZE / 2 + 40);
+        String exitInstructions = "Press ESC to exit";
+        g.drawString(exitInstructions, 105, SIZE / 2 + 60);
+    }
+
+    private void restartGame() {
+        inGame = true;
+        dots = 3;
+        for (int i = 0; i < dots; i++) {
+            x[i] = 48 - i * DOT_SIZE;
+            y[i] = 48;
+        }
+        createApple();
+        timer.start();
+        repaint();
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (inGame) {
+            g.drawImage(apple, appleX, appleY, this);
+            for (int i = 0; i < dots; i++) {
+                g.drawImage(dot, x[i], y[i], this);
+            }
+        } else {
+            showGameOver(g);
+        }
     }
 
     class FieldKeyListener extends KeyAdapter {
@@ -141,26 +170,35 @@ public class GameField extends JPanel implements ActionListener {
         public void keyPressed(KeyEvent e) {
             super.keyPressed(e);
             int key = e.getKeyCode();
-            if(key == KeyEvent.VK_LEFT && !right){
-                left = true;
-                up = false;
-                down = false;
-            }
-            if(key == KeyEvent.VK_RIGHT && !left){
-                right = true;
-                up = false;
-                down = false;
-            }
 
-            if(key == KeyEvent.VK_UP && !down){
-                right = false;
-                up = true;
-                left = false;
-            }
-            if(key == KeyEvent.VK_DOWN && !up){
-                right = false;
-                down = true;
-                left = false;
+            if (inGame) {
+                if (key == KeyEvent.VK_LEFT && !right) {
+                    left = true;
+                    up = false;
+                    down = false;
+                }
+                if (key == KeyEvent.VK_RIGHT && !left) {
+                    right = true;
+                    up = false;
+                    down = false;
+                }
+                if (key == KeyEvent.VK_UP && !down) {
+                    up = true;
+                    left = false;
+                    right = false;
+                }
+                if (key == KeyEvent.VK_DOWN && !up) {
+                    down = true;
+                    left = false;
+                    right = false;
+                }
+            } else {
+                if (key == KeyEvent.VK_ENTER) {
+                    restartGame();
+                }
+                if (key == KeyEvent.VK_ESCAPE) {
+                    System.exit(0);
+                }
             }
         }
     }
